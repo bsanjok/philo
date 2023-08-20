@@ -1,0 +1,7 @@
+{
+	"files.associations": {
+		"philo.h": "c",
+		"_select.h": "c",
+		"complex": "c"
+	}
+}
