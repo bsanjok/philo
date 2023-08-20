@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:55 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/20 14:34:50 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/20 16:05:51 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,20 @@
 # include <pthread.h>
 # include <sys/time.h>
 
+typedef struct s_philosophers
+{
+	pthread_t		*threads;
+	int				has_eaten;
+	int				is_dead;
+	float			eat_time;
+	float			think_time;
+	float			sleep_time;
+}	t_philosophers;
+
 typedef struct s_philo
 {
 	pthread_mutex_t	*mutex;
-	pthread_t		*threads;
+	t_philosophers	*head;
 	int				number_of_philosophers;
 	int				time_to_die;
 	int				time_to_sleep;

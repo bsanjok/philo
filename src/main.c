@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/20 14:38:58 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/20 16:34:24 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,39 +69,47 @@ void	thread_test(void)
 }
 
 
-int	philo_eat(t_philo *philo)
+int	philo_eat(t_philo *philo, float init_time)
 {
-	float	init_time;
 
-	if (philo->leftfork == 0 && philo->rightfork == 0)
+	philo->leftfork = 1;
+	printf("Philosopher %d has taken a left fork.\n", philo->index);
+	philo->rightfork = 1;
+	printf("Philosopher %d has taken a right fork.\n", philo->index);
+	printf("%f ms Philosopher %d is eating.\n", ft_gettime() - init_time, philo->index);
+	while (1)
 	{
-		philo->leftfork = 1;
-		init_time = ft_gettime();
-		printf("Philosopher %d has taken a left fork.\n", philo->index);
-		philo->rightfork = 1;
-		printf("Philosopher %d has taken a right fork.\n", philo->index);
-		printf("%f ms Philosopher %d is eating.\n", ft_gettime() - init_time, philo->index);
-		while (ft_gettime() - init_time <= philo->time_to_eat)
-		{
-			usleep(1000);
-		}
+		printf("init_time: %f\n", init_time);
+		printf("ft_gettime: %f\n", ft_gettime());
+		printf("curr: %f, time_to_eat: %d\n", ft_gettime() - init_time, philo->time_to_eat);
+		if (ft_gettime() - init_time > philo->time_to_eat)
+			break ;
+		// printf("I am here\n");
+		// usleep(1000);
 	}
+	philo->head->has_eaten = 1;
+	philo->leftfork = 0;
+	philo->rightfork = 0;
 	return (1);
 }
+
 
 
 void	*start_philo(void *philo)
 {
 	t_philo	*holder;
+	float	init_time;
 
 
+	init_time = ft_gettime();
 	holder = (t_philo *)philo;
 	pthread_mutex_lock(&holder->mutex[holder->index]);
-	holder->leftfork = 1;
-	holder->rightfork = 1;
+	philo_eat(holder, init_time);
+	while (!(holder->leftfork && holder->rightfork))
+	{
+
+	}
 	pthread_mutex_unlock(&holder->mutex[holder->index]);
-	usleep()
-	philo_eat(holder);
 	return (NULL);
 }
 
@@ -115,7 +123,7 @@ int	init_philos(t_philo *philo)
 	{
 		philo->index++;
 		pthread_mutex_init(&(philo->mutex[i]), NULL);
-		if (pthread_create(&philo->threads[i], NULL, &start_philo, philo))
+		if (pthread_create(&philo->head->threads[i], NULL, &start_philo, philo))
 			return (0);
 		i++;
 		usleep(1000);
@@ -123,7 +131,7 @@ int	init_philos(t_philo *philo)
 	i = 0;
 	while (i < philo->number_of_philosophers)
 	{
-		pthread_join(philo->threads[i], NULL);
+		pthread_join(philo->head->threads[i], NULL);
 		i++;
 	}
 	i = 0;
@@ -149,14 +157,15 @@ double	ft_gettime(void)
 
 int	philo_init(t_philo *philo, char **argv)
 {
+	philo->head = malloc(sizeof(t_philosophers));
 	philo->number_of_philosophers = atoi(argv[1]);
 	philo->leftfork = 0;
 	philo->rightfork = 0;
 	philo->time_to_die = atoi(argv[2]);
 	philo->time_to_eat = atoi(argv[3]);
 	philo->time_to_sleep = atoi(argv[4]);
-	philo->threads = malloc(philo->number_of_philosophers);
-	if (!philo->threads)
+	philo->head->threads = malloc(philo->number_of_philosophers);
+	if (!philo->head->threads)
 		return (1);
 	*philo->num = 0;
 	philo->start = ft_gettime();
