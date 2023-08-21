@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:55 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/20 16:05:51 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/21 13:54:26 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,33 +20,34 @@
 # include <pthread.h>
 # include <sys/time.h>
 
-typedef struct s_philosophers
-{
-	pthread_t		*threads;
-	int				has_eaten;
-	int				is_dead;
-	float			eat_time;
-	float			think_time;
-	float			sleep_time;
-}	t_philosophers;
-
 typedef struct s_philo
 {
-	pthread_mutex_t	*mutex;
-	t_philosophers	*head;
-	int				number_of_philosophers;
-	int				time_to_die;
-	int				time_to_sleep;
-	int				time_to_eat;
-	int				*num;
-	long			start;
-	int				index;
-	int				leftfork;
-	int				rightfork;
+	pthread_t		*threads;
+
+
 }	t_philo;
+
+typedef struct s_program
+{
+	pthread_mutex_t		*fork;
+	pthread_mutex_t		print_msg;
+	pthread_mutex_t		eat;
+	t_philo				*head;
+	size_t				number_of_philosophers;
+	size_t				time_to_die;
+	size_t				time_to_sleep;
+	size_t				time_to_eat;
+	size_t				*num;
+	size_t				start;
+	size_t				index;
+	int					dead;
+	int					leftfork;
+	int					rightfork;
+}	t_program;
 #endif
 
-double	ft_gettime(void);
+size_t	ft_gettime(void);
+int		ft_usleep(size_t ms);
 
 /*
 // take one fork

@@ -6,12 +6,11 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/20 16:34:24 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/21 13:51:01 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/philo.h"
-
 
 void	free_and_exit(void *n, int exit_code)
 {
@@ -23,111 +22,51 @@ void	free_and_exit(void *n, int exit_code)
 	exit(exit_code);
 }
 
-void	*print_hello(void *arg)
+int	philo_print_statement(t_program *philo, size_t philo_index, char *msg)
 {
-	int	i;
+	pthread_mutex_lock(&philo->print_msg);
+	printf("%zu ms Philosopher %lu %s.\n", ft_gettime() - philo->start, philo_index, msg);
+	pthread_mutex_unlock(&philo->print_msg);
+	return (0);
+}
 
-	i = 0;
-	arg = NULL;
-	while (i < 100)
+void	*start_program(void *philo)
+{
+	t_program	*holder;
+
+	holder = (t_program *)philo;
+	while (!holder->dead)
 	{
-		printf("Hello\n");
-		i++;
-		usleep(10000);
+		pthread_mutex_lock(&holder->fork[holder->index]);
+		pthread_mutex_lock(&holder->eat);
+		philo_print_statement(philo, holder->index, "is eating");
+		ft_usleep(holder->time_to_eat);
+		pthread_mutex_unlock(&holder->eat);
+		pthread_mutex_unlock(&holder->fork[holder->index]);
 	}
 	return (NULL);
 }
 
-void	*print_world(void *arg)
+int	init_programs(t_program *philo)
 {
-	int	i;
-
-	i = 0;
-	arg = NULL;
-	while (i < 100)
-	{
-		printf("\t\tWorld\n");
-		i++;
-		usleep(10000);
-	}
-	return (NULL);
-}
-
-void	thread_test(void)
-{
-	pthread_t	t1;
-	pthread_t	t2;
-
-	if (pthread_create(&t1, NULL, print_hello, NULL))
-		exit (1);
-	if (pthread_create(&t2, NULL, print_world, NULL))
-		exit (1);
-	if (pthread_join(t1, NULL))
-		exit(1);
-	if (pthread_join(t2, NULL))
-		exit (1);
-}
-
-
-int	philo_eat(t_philo *philo, float init_time)
-{
-
-	philo->leftfork = 1;
-	printf("Philosopher %d has taken a left fork.\n", philo->index);
-	philo->rightfork = 1;
-	printf("Philosopher %d has taken a right fork.\n", philo->index);
-	printf("%f ms Philosopher %d is eating.\n", ft_gettime() - init_time, philo->index);
-	while (1)
-	{
-		printf("init_time: %f\n", init_time);
-		printf("ft_gettime: %f\n", ft_gettime());
-		printf("curr: %f, time_to_eat: %d\n", ft_gettime() - init_time, philo->time_to_eat);
-		if (ft_gettime() - init_time > philo->time_to_eat)
-			break ;
-		// printf("I am here\n");
-		// usleep(1000);
-	}
-	philo->head->has_eaten = 1;
-	philo->leftfork = 0;
-	philo->rightfork = 0;
-	return (1);
-}
-
-
-
-void	*start_philo(void *philo)
-{
-	t_philo	*holder;
-	float	init_time;
-
-
-	init_time = ft_gettime();
-	holder = (t_philo *)philo;
-	pthread_mutex_lock(&holder->mutex[holder->index]);
-	philo_eat(holder, init_time);
-	while (!(holder->leftfork && holder->rightfork))
-	{
-
-	}
-	pthread_mutex_unlock(&holder->mutex[holder->index]);
-	return (NULL);
-}
-
-int	init_philos(t_philo *philo)
-{
-	int	i;
+	size_t	i;
 
 	i = 0;
 	philo->index = 0;
+	pthread_mutex_init(&(philo->print_msg), NULL);
+	pthread_mutex_init(&(philo->eat), NULL);
+	pthread_mutex_lock(&philo->print_msg);
 	while (i < philo->number_of_philosophers)
 	{
 		philo->index++;
-		pthread_mutex_init(&(philo->mutex[i]), NULL);
-		if (pthread_create(&philo->head->threads[i], NULL, &start_philo, philo))
+		pthread_mutex_init(&(philo->fork[i]), NULL);
+		if (pthread_create(&philo->head->threads[i], NULL, &start_program, philo))
 			return (0);
 		i++;
 		usleep(1000);
 	}
+	philo->start = ft_gettime();
+	pthread_mutex_unlock(&philo->print_msg);
 	i = 0;
 	while (i < philo->number_of_philosophers)
 	{
@@ -137,17 +76,18 @@ int	init_philos(t_philo *philo)
 	i = 0;
 	while (i < philo->number_of_philosophers)
 	{
-		pthread_mutex_destroy(&philo->mutex[i]);
+		pthread_mutex_destroy(&philo->fork[i]);
 		i++;
 	}
-	printf("n: %d\n", *philo->num);
+	pthread_mutex_destroy(&philo->print_msg);
+	pthread_mutex_destroy(&philo->eat);
 	return (1);
 }
 
-double	ft_gettime(void)
+size_t	ft_gettime(void)
 {
 	struct timeval	tv;
-	double			result;
+	size_t			result;
 
 	if (gettimeofday(&tv, NULL) == -1)
 		return (-1);
@@ -155,12 +95,23 @@ double	ft_gettime(void)
 	return (result);
 }
 
-int	philo_init(t_philo *philo, char **argv)
+int		ft_usleep(size_t ms)
 {
-	philo->head = malloc(sizeof(t_philosophers));
+	size_t	start;
+
+	start = ft_gettime();
+	while ((ft_gettime() - start) < ms)
+		usleep(500);
+	return (0);
+}
+
+int	philo_init(t_program *philo, char **argv)
+{
+	philo->head = malloc(sizeof(t_philo));
 	philo->number_of_philosophers = atoi(argv[1]);
 	philo->leftfork = 0;
 	philo->rightfork = 0;
+	philo->dead = 0;
 	philo->time_to_die = atoi(argv[2]);
 	philo->time_to_eat = atoi(argv[3]);
 	philo->time_to_sleep = atoi(argv[4]);
@@ -174,23 +125,20 @@ int	philo_init(t_philo *philo, char **argv)
 
 int	main(int argc, char **argv)
 {
-	t_philo *philo;
+	t_program	*philo;
 
 	if (argc != 5)
 		return (1);
-	philo = malloc(sizeof(t_philo));
+	philo = malloc(sizeof(t_program));
 	if (!philo)
 		return (1);
 	philo->num = malloc(sizeof(int));
 	if (!philo->num)
 		exit (1);
-	philo->mutex = malloc(atoi(argv[1]) * sizeof(pthread_mutex_t));
-	if (!philo->mutex)
+	philo->fork = malloc(atoi(argv[1]) * sizeof(pthread_mutex_t));
+	if (!philo->fork)
 		exit (1);
 	philo_init(philo, argv);
-	printf("time: %ld\n", philo->start);
-	usleep(1000);
-	printf("elapsed: %f \n", ft_gettime() - philo->start);
-	init_philos(philo);
+	init_programs(philo);
 	return (0);
 }
