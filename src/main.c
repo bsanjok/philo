@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/21 18:35:29 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/21 18:50:00 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,13 @@ int	eat(t_program *prgm, t_philo *philos, int philo_index)
 	return (1);
 }
 
+int	sleeping(t_program *prgm, t_philo *philos, int philo_index)
+{
+	philo_print_statement(philos, prgm, philo_index, "is sleeping");
+	ft_usleep(prgm->time_to_sleep);
+	return (1);
+}
+
 int	take_fork_to_eat(t_program *prgm, t_philo *philos)
 {
 	int	i;
@@ -50,10 +57,14 @@ int	take_fork_to_eat(t_program *prgm, t_philo *philos)
 	{
 		pthread_mutex_lock(&prgm->forks[philos->left_index]);
 		philos[i].start_time = ft_gettime();
-		philo_print_statement(philos, prgm, i + 1, "has taken a fork");
+		philo_print_statement(philos, prgm, i, "has taken left fork");
+		pthread_mutex_lock(&prgm->forks[philos->right_index]);
+		philo_print_statement(philos, prgm, i, "has taken right fork");
+		pthread_mutex_unlock(&prgm->forks[philos->right_index]);
+		pthread_mutex_unlock(&prgm->forks[philos->left_index]);
 		eat(prgm, philos, i);
 		ft_usleep(prgm->time_to_eat);
-		pthread_mutex_unlock(&prgm->forks[philos->left_index]);
+		sleeping(prgm, philos, i);
 		i++;
 	}
 	return (1);
@@ -138,7 +149,6 @@ int	philo_init(t_program *prgm)
 		prgm->philos[i].left_index = i;
 		prgm->philos[i].right_index = i + 1;
 		prgm->philos[i].id = i + 1;
-		prgm->philos[i].dead = &prgm->dead;
 		i++;
 	}
 	i = 0;

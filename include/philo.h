@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:55 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/21 17:53:47 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/21 18:38:51 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,6 @@ typedef struct s_philo
 	int					right_index;
 	size_t				last_meal;
 	size_t				start_time;
-	int					*dead;
 	struct s_program	*prgm;
 
 }	t_philo;
