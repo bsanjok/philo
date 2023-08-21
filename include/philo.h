@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:55 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/21 13:54:26 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/21 17:53:47 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,27 +22,34 @@
 
 typedef struct s_philo
 {
-	pthread_t		*threads;
-
+	pthread_t			threads;
+	int					id;
+	int					eating;
+	int					meals_eaten;
+	int					left_index;
+	int					right_index;
+	size_t				last_meal;
+	size_t				start_time;
+	int					*dead;
+	struct s_program	*prgm;
 
 }	t_philo;
 
 typedef struct s_program
 {
-	pthread_mutex_t		*fork;
-	pthread_mutex_t		print_msg;
-	pthread_mutex_t		eat;
-	t_philo				*head;
-	size_t				number_of_philosophers;
+	int					dead;
+	pthread_mutex_t		*forks;
+	pthread_mutex_t		print_lock;
+	pthread_mutex_t		meal_lock;
+	pthread_mutex_t		dead_lock;
 	size_t				time_to_die;
 	size_t				time_to_sleep;
 	size_t				time_to_eat;
-	size_t				*num;
-	size_t				start;
-	size_t				index;
-	int					dead;
-	int					leftfork;
-	int					rightfork;
+	int					number_of_philosophers;
+	int					num_times_to_eat;
+
+	t_philo				*philos;
+
 }	t_program;
 #endif
 

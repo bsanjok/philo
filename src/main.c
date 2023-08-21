@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/21 13:51:01 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/21 18:35:29 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,66 +22,57 @@ void	free_and_exit(void *n, int exit_code)
 	exit(exit_code);
 }
 
-int	philo_print_statement(t_program *philo, size_t philo_index, char *msg)
+int	philo_print_statement(t_philo *philos, t_program *prgm, size_t philo_index, char *msg)
 {
-	pthread_mutex_lock(&philo->print_msg);
-	printf("%zu ms Philosopher %lu %s.\n", ft_gettime() - philo->start, philo_index, msg);
-	pthread_mutex_unlock(&philo->print_msg);
+	pthread_mutex_lock(&prgm->print_lock);
+	printf("%zu ms Philosopher %lu %s.\n", ft_gettime() - philos->start_time, philo_index + 1, msg);
+	pthread_mutex_unlock(&prgm->print_lock);
 	return (0);
 }
 
-void	*start_program(void *philo)
+int	eat(t_program *prgm, t_philo *philos, int philo_index)
 {
-	t_program	*holder;
-
-	holder = (t_program *)philo;
-	while (!holder->dead)
-	{
-		pthread_mutex_lock(&holder->fork[holder->index]);
-		pthread_mutex_lock(&holder->eat);
-		philo_print_statement(philo, holder->index, "is eating");
-		ft_usleep(holder->time_to_eat);
-		pthread_mutex_unlock(&holder->eat);
-		pthread_mutex_unlock(&holder->fork[holder->index]);
-	}
-	return (NULL);
+	pthread_mutex_lock(&prgm->meal_lock);
+	philo_print_statement(philos, prgm, philo_index, "philo is eating");
+	philos[philo_index].meals_eaten++;
+	if (philos[philo_index].meals_eaten == 10)
+		prgm->dead = 1;
+	pthread_mutex_unlock(&prgm->meal_lock);
+	return (1);
 }
 
-int	init_programs(t_program *philo)
+int	take_fork_to_eat(t_program *prgm, t_philo *philos)
 {
-	size_t	i;
+	int	i;
 
 	i = 0;
-	philo->index = 0;
-	pthread_mutex_init(&(philo->print_msg), NULL);
-	pthread_mutex_init(&(philo->eat), NULL);
-	pthread_mutex_lock(&philo->print_msg);
-	while (i < philo->number_of_philosophers)
+	while (i < prgm->number_of_philosophers - 1)
 	{
-		philo->index++;
-		pthread_mutex_init(&(philo->fork[i]), NULL);
-		if (pthread_create(&philo->head->threads[i], NULL, &start_program, philo))
-			return (0);
-		i++;
-		usleep(1000);
-	}
-	philo->start = ft_gettime();
-	pthread_mutex_unlock(&philo->print_msg);
-	i = 0;
-	while (i < philo->number_of_philosophers)
-	{
-		pthread_join(philo->head->threads[i], NULL);
+		pthread_mutex_lock(&prgm->forks[philos->left_index]);
+		philos[i].start_time = ft_gettime();
+		philo_print_statement(philos, prgm, i + 1, "has taken a fork");
+		eat(prgm, philos, i);
+		ft_usleep(prgm->time_to_eat);
+		pthread_mutex_unlock(&prgm->forks[philos->left_index]);
 		i++;
 	}
-	i = 0;
-	while (i < philo->number_of_philosophers)
-	{
-		pthread_mutex_destroy(&philo->fork[i]);
-		i++;
-	}
-	pthread_mutex_destroy(&philo->print_msg);
-	pthread_mutex_destroy(&philo->eat);
 	return (1);
+}
+
+void	*start_program(void *philos)
+{
+	t_philo		*holder;
+	t_program	*prgm;
+	int			i;
+
+	i = 0;
+	holder = (t_philo *)philos;
+	prgm = holder->prgm;
+	while (prgm->dead != 1)
+	{
+		take_fork_to_eat(prgm, philos);
+	}
+	return (NULL);
 }
 
 size_t	ft_gettime(void)
@@ -95,7 +86,7 @@ size_t	ft_gettime(void)
 	return (result);
 }
 
-int		ft_usleep(size_t ms)
+int	ft_usleep(size_t ms)
 {
 	size_t	start;
 
@@ -105,40 +96,107 @@ int		ft_usleep(size_t ms)
 	return (0);
 }
 
-int	philo_init(t_program *philo, char **argv)
+int	init_prgm(t_program *prgm, char **argv)
 {
-	philo->head = malloc(sizeof(t_philo));
-	philo->number_of_philosophers = atoi(argv[1]);
-	philo->leftfork = 0;
-	philo->rightfork = 0;
-	philo->dead = 0;
-	philo->time_to_die = atoi(argv[2]);
-	philo->time_to_eat = atoi(argv[3]);
-	philo->time_to_sleep = atoi(argv[4]);
-	philo->head->threads = malloc(philo->number_of_philosophers);
-	if (!philo->head->threads)
-		return (1);
-	*philo->num = 0;
-	philo->start = ft_gettime();
+	int	i;
+
+	i = 0;
+	prgm->number_of_philosophers = atoi(argv[1]);
+	prgm->time_to_die = atoi(argv[2]);
+	prgm->time_to_eat = atoi(argv[3]);
+	prgm->time_to_sleep = atoi(argv[4]);
+	prgm->forks = malloc(sizeof(pthread_mutex_t) * prgm->number_of_philosophers + 1);
+	if (!prgm->forks)
+		return (0);
+	while (i < prgm->number_of_philosophers)
+	{
+		pthread_mutex_init(&(prgm->forks[i]), NULL);
+		i++;
+	}
+	pthread_mutex_init(&(prgm->print_lock), NULL);
+	pthread_mutex_init(&(prgm->meal_lock), NULL);
+	pthread_mutex_init(&(prgm->dead_lock), NULL);
+	return (1);
+}
+
+int	philo_init(t_program *prgm)
+{
+	int			i;
+	t_philo		*temp;
+
+	i = 0;
+	prgm->philos = (t_philo *)malloc(sizeof(t_philo) * prgm->number_of_philosophers);
+	if (!prgm->philos)
+		return (0);
+	while (i < prgm->number_of_philosophers)
+	{
+		prgm->philos[i].last_meal = 0;
+		prgm->philos[i].meals_eaten = 0;
+		prgm->philos[i].eating = 0;
+		prgm->philos[i].prgm = prgm;
+		prgm->philos[i].start_time = 0;
+		prgm->philos[i].left_index = i;
+		prgm->philos[i].right_index = i + 1;
+		prgm->philos[i].id = i + 1;
+		prgm->philos[i].dead = &prgm->dead;
+		i++;
+	}
+	i = 0;
+	while (i < prgm->number_of_philosophers)
+	{
+		temp = prgm->philos;
+		pthread_mutex_init(&(prgm->forks[i]), NULL);
+		if (pthread_create(&(temp[i].threads), NULL, &start_program, temp))
+			return (-1);
+		i++;
+	}
 	return (0);
+}
+
+int	mutex_destroy(t_program *prgm)
+{
+	int		i;
+
+	i = 0;
+	while (i < prgm->number_of_philosophers)
+	{
+		pthread_mutex_destroy(&prgm->forks[i]);
+		i++;
+	}
+	pthread_mutex_destroy(&prgm->print_lock);
+	pthread_mutex_destroy(&prgm->meal_lock);
+	pthread_mutex_destroy(&prgm->dead_lock);
+	return (1);
+}
+
+int	thread_join(t_program *prgm)
+{
+	int			i;
+	t_philo		temp;
+
+	i = 0;
+	while (i < prgm->number_of_philosophers)
+	{
+		temp = prgm->philos[i];
+		pthread_join(temp.threads, NULL);
+		i++;
+	}
+	return (1);
 }
 
 int	main(int argc, char **argv)
 {
-	t_program	*philo;
+	t_program	*prgm;
 
 	if (argc != 5)
 		return (1);
-	philo = malloc(sizeof(t_program));
-	if (!philo)
+	prgm = malloc(sizeof(t_program));
+	if (!prgm)
 		return (1);
-	philo->num = malloc(sizeof(int));
-	if (!philo->num)
-		exit (1);
-	philo->fork = malloc(atoi(argv[1]) * sizeof(pthread_mutex_t));
-	if (!philo->fork)
-		exit (1);
-	philo_init(philo, argv);
-	init_programs(philo);
+	init_prgm(prgm, argv);
+	philo_init(prgm);
+	thread_join(prgm);
+	mutex_destroy(prgm);
+	// init_programs(philo);
 	return (0);
 }
