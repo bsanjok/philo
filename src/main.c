@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/21 18:50:00 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/21 19:13:36 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,7 +156,7 @@ int	philo_init(t_program *prgm)
 	{
 		temp = prgm->philos;
 		pthread_mutex_init(&(prgm->forks[i]), NULL);
-		if (pthread_create(&(temp[i].threads), NULL, &start_program, temp))
+		if (pthread_create(&(temp[i].threads), NULL, &start_program, &prgm->philos[i]))
 			return (-1);
 		i++;
 	}
