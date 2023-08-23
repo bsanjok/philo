@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/21 19:13:36 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/23 13:59:09 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ void	free_and_exit(void *n, int exit_code)
 int	philo_print_statement(t_philo *philos, t_program *prgm, size_t philo_index, char *msg)
 {
 	pthread_mutex_lock(&prgm->print_lock);
-	printf("%zu ms Philosopher %lu %s.\n", ft_gettime() - philos->start_time, philo_index + 1, msg);
+	printf("%zu ms Philosopher %lu %s.\n", ft_gettime() - philos->start_time, philo_index, msg);
 	pthread_mutex_unlock(&prgm->print_lock);
 	return (0);
 }
@@ -33,7 +33,7 @@ int	philo_print_statement(t_philo *philos, t_program *prgm, size_t philo_index, 
 int	eat(t_program *prgm, t_philo *philos, int philo_index)
 {
 	pthread_mutex_lock(&prgm->meal_lock);
-	philo_print_statement(philos, prgm, philo_index, "philo is eating");
+	philo_print_statement(philos, prgm, philo_index, "is eating");
 	philos[philo_index].meals_eaten++;
 	if (philos[philo_index].meals_eaten == 10)
 		prgm->dead = 1;
@@ -50,23 +50,16 @@ int	sleeping(t_program *prgm, t_philo *philos, int philo_index)
 
 int	take_fork_to_eat(t_program *prgm, t_philo *philos)
 {
-	int	i;
-
-	i = 0;
-	while (i < prgm->number_of_philosophers - 1)
-	{
-		pthread_mutex_lock(&prgm->forks[philos->left_index]);
-		philos[i].start_time = ft_gettime();
-		philo_print_statement(philos, prgm, i, "has taken left fork");
-		pthread_mutex_lock(&prgm->forks[philos->right_index]);
-		philo_print_statement(philos, prgm, i, "has taken right fork");
-		pthread_mutex_unlock(&prgm->forks[philos->right_index]);
-		pthread_mutex_unlock(&prgm->forks[philos->left_index]);
-		eat(prgm, philos, i);
-		ft_usleep(prgm->time_to_eat);
-		sleeping(prgm, philos, i);
-		i++;
-	}
+	pthread_mutex_lock(&prgm->forks[philos->left_index]);
+	philos->start_time = ft_gettime();
+	philo_print_statement(philos, prgm, philos->id, "has taken left fork");
+	pthread_mutex_lock(&prgm->forks[philos->right_index]);
+	philo_print_statement(philos, prgm, philos->id, "has taken right fork");
+	pthread_mutex_unlock(&prgm->forks[philos->right_index]);
+	pthread_mutex_unlock(&prgm->forks[philos->left_index]);
+	eat(prgm, philos, philos->id);
+	ft_usleep(prgm->time_to_eat);
+	sleeping(prgm, philos, philos->id);
 	return (1);
 }
 
