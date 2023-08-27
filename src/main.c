@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/23 13:59:09 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/27 14:19:01 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,44 +22,62 @@ void	free_and_exit(void *n, int exit_code)
 	exit(exit_code);
 }
 
-int	philo_print_statement(t_philo *philos, t_program *prgm, size_t philo_index, char *msg)
+int	philo_print_statement(t_philo *philos, t_program *prgm, char *msg)
 {
 	pthread_mutex_lock(&prgm->print_lock);
-	printf("%zu ms Philosopher %lu %s.\n", ft_gettime() - philos->start_time, philo_index, msg);
+	printf("%zu ms Philosopher %d %s.\n", ft_gettime() - prgm->start_time, philos->id, msg);
 	pthread_mutex_unlock(&prgm->print_lock);
 	return (0);
 }
 
 int	eat(t_program *prgm, t_philo *philos, int philo_index)
 {
-	pthread_mutex_lock(&prgm->meal_lock);
-	philo_print_statement(philos, prgm, philo_index, "is eating");
+	pthread_mutex_lock(&philos->meal_lock);
 	philos[philo_index].meals_eaten++;
 	if (philos[philo_index].meals_eaten == 10)
 		prgm->dead = 1;
-	pthread_mutex_unlock(&prgm->meal_lock);
+	pthread_mutex_unlock(&philos->meal_lock);
 	return (1);
 }
 
-int	sleeping(t_program *prgm, t_philo *philos, int philo_index)
+int	sleeping(t_program *prgm, t_philo *philos)
 {
-	philo_print_statement(philos, prgm, philo_index, "is sleeping");
+	philo_print_statement(philos, prgm, "is sleeping");
 	ft_usleep(prgm->time_to_sleep);
+	return (1);
+}
+
+int	take_left_fork(t_program *prgm, t_philo *philos)
+{
+	pthread_mutex_lock(&philos->left_fork);
+	philo_print_statement(philos, prgm, "has taken left fork");
+	return (1);
+}
+
+int	take_right_fork(t_program *prgm, t_philo *philos)
+{
+	pthread_mutex_lock(&philos->right_fork);
+	philo_print_statement(philos, prgm, "has taken right fork");
 	return (1);
 }
 
 int	take_fork_to_eat(t_program *prgm, t_philo *philos)
 {
-	pthread_mutex_lock(&prgm->forks[philos->left_index]);
-	philos->start_time = ft_gettime();
-	philo_print_statement(philos, prgm, philos->id, "has taken left fork");
-	pthread_mutex_lock(&prgm->forks[philos->right_index]);
-	philo_print_statement(philos, prgm, philos->id, "has taken right fork");
-	pthread_mutex_unlock(&prgm->forks[philos->right_index]);
-	pthread_mutex_unlock(&prgm->forks[philos->left_index]);
+	if (philos->id % 2)
+	{
+		take_right_fork(prgm, philos);
+		take_left_fork(prgm, philos);
+	}
+	else
+	{
+		take_left_fork(prgm, philos);
+		take_right_fork(prgm, philos);
+	}
+	philo_print_statement(philos, prgm, "is eating");
 	eat(prgm, philos, philos->id);
 	ft_usleep(prgm->time_to_eat);
-	sleeping(prgm, philos, philos->id);
+	pthread_mutex_unlock(&philos->left_fork);
+	pthread_mutex_unlock(&philos->right_fork);
 	return (1);
 }
 
@@ -75,6 +93,8 @@ void	*start_program(void *philos)
 	while (prgm->dead != 1)
 	{
 		take_fork_to_eat(prgm, philos);
+		sleeping(prgm, philos);
+		philo_print_statement(philos, prgm, "is thinking");
 	}
 	return (NULL);
 }
@@ -109,6 +129,7 @@ int	init_prgm(t_program *prgm, char **argv)
 	prgm->time_to_die = atoi(argv[2]);
 	prgm->time_to_eat = atoi(argv[3]);
 	prgm->time_to_sleep = atoi(argv[4]);
+	prgm->start_time = ft_gettime();
 	prgm->forks = malloc(sizeof(pthread_mutex_t) * prgm->number_of_philosophers + 1);
 	if (!prgm->forks)
 		return (0);
@@ -120,6 +141,7 @@ int	init_prgm(t_program *prgm, char **argv)
 	pthread_mutex_init(&(prgm->print_lock), NULL);
 	pthread_mutex_init(&(prgm->meal_lock), NULL);
 	pthread_mutex_init(&(prgm->dead_lock), NULL);
+	pthread_mutex_init(&(prgm->start_time_lock), NULL);
 	return (1);
 }
 
@@ -134,13 +156,11 @@ int	philo_init(t_program *prgm)
 		return (0);
 	while (i < prgm->number_of_philosophers)
 	{
+		prgm->philos[i].meal_lock = prgm->meal_lock;
 		prgm->philos[i].last_meal = 0;
 		prgm->philos[i].meals_eaten = 0;
 		prgm->philos[i].eating = 0;
 		prgm->philos[i].prgm = prgm;
-		prgm->philos[i].start_time = 0;
-		prgm->philos[i].left_index = i;
-		prgm->philos[i].right_index = i + 1;
 		prgm->philos[i].id = i + 1;
 		i++;
 	}
@@ -152,6 +172,14 @@ int	philo_init(t_program *prgm)
 		if (pthread_create(&(temp[i].threads), NULL, &start_program, &prgm->philos[i]))
 			return (-1);
 		i++;
+	}
+	i = 0;
+	prgm->philos[0].left_fork = prgm->forks[i];
+	prgm->philos[0].right_fork = prgm->forks[prgm->number_of_philosophers - 1];
+	while (++i < prgm->number_of_philosophers)
+	{
+		prgm->philos[i].left_fork = prgm->forks[i];
+		prgm->philos[i].right_fork = prgm->forks[i - 1];
 	}
 	return (0);
 }
@@ -169,6 +197,7 @@ int	mutex_destroy(t_program *prgm)
 	pthread_mutex_destroy(&prgm->print_lock);
 	pthread_mutex_destroy(&prgm->meal_lock);
 	pthread_mutex_destroy(&prgm->dead_lock);
+	pthread_mutex_destroy(&prgm->start_time_lock);
 	return (1);
 }
 
