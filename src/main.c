@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/27 14:19:01 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/27 16:15:47 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,9 @@ int	philo_print_statement(t_philo *philos, t_program *prgm, char *msg)
 int	eat(t_program *prgm, t_philo *philos, int philo_index)
 {
 	pthread_mutex_lock(&philos->meal_lock);
+	philo_print_statement(philos, prgm, "is eating");
+	ft_usleep(prgm->time_to_eat);
+	philos->last_meal = ft_gettime();
 	philos[philo_index].meals_eaten++;
 	if (philos[philo_index].meals_eaten == 10)
 		prgm->dead = 1;
@@ -73,9 +76,7 @@ int	take_fork_to_eat(t_program *prgm, t_philo *philos)
 		take_left_fork(prgm, philos);
 		take_right_fork(prgm, philos);
 	}
-	philo_print_statement(philos, prgm, "is eating");
 	eat(prgm, philos, philos->id);
-	ft_usleep(prgm->time_to_eat);
 	pthread_mutex_unlock(&philos->left_fork);
 	pthread_mutex_unlock(&philos->right_fork);
 	return (1);
@@ -95,6 +96,11 @@ void	*start_program(void *philos)
 		take_fork_to_eat(prgm, philos);
 		sleeping(prgm, philos);
 		philo_print_statement(philos, prgm, "is thinking");
+		printf("time: %zu\n", ft_gettime() - holder->last_meal);
+		if (prgm->time_to_die > ft_gettime() - holder->last_meal)
+		{
+			prgm->dead = 1;
+		}
 	}
 	return (NULL);
 }
