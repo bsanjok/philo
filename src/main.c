@@ -6,7 +6,7 @@
 /*   By: sanjokbhatta <sanjokbhatta@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/30 14:21:14 by sanjokbhatt      ###   ########.fr       */
+/*   Updated: 2023/08/30 14:37:52 by sanjokbhatt      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,24 @@ int	eat(t_program *prgm, t_philo *philos, int philo_index)
 	philos[philo_index].meals_eaten++;
 	pthread_mutex_unlock(&philos->meal_lock);
 	return (1);
+}
+
+int check_number_of_times_eaten(t_program *prgm)
+{
+	int	i;
+	int	j;
+
+	i = 0;
+	j = 0;
+	while (i < prgm->number_of_philosophers)
+	{
+		if (prgm->philos[i].meals_eaten >= prgm->num_times_to_eat)
+			j++;
+		i++;
+	}
+	if (j == prgm->number_of_philosophers)
+		return (1);
+	return (0);
 }
 
 int	sleeping(t_program *prgm, t_philo *philos)
@@ -119,6 +137,10 @@ void	*start_program(void *philos)
 	{
 		if (!take_fork_to_eat(prgm, philos))
 			break ;
+		pthread_mutex_lock(&holder->meals_eaten_lock);
+		if (check_number_of_times_eaten(prgm))
+			break ;
+		pthread_mutex_unlock(&holder->meals_eaten_lock);
 		if (check_death(prgm, holder))
 			break ;
 		if (!sleeping(prgm, philos))
@@ -162,6 +184,7 @@ int	init_prgm(t_program *prgm, char **argv)
 	prgm->time_to_die = atoi(argv[2]);
 	prgm->time_to_eat = atoi(argv[3]);
 	prgm->time_to_sleep = atoi(argv[4]);
+	prgm->num_times_to_eat = atoi(argv[5]);
 	prgm->start_time = ft_gettime();
 	prgm->end_now = 0;
 	prgm->forks = malloc(sizeof(pthread_mutex_t) * prgm->number_of_philosophers + 1);
@@ -188,6 +211,7 @@ int	philo_init(t_program *prgm)
 	{
 		pthread_mutex_init(&(prgm->philos[i].meal_lock), NULL);
 		pthread_mutex_init(&(prgm->philos[i].dead_lock), NULL);
+		pthread_mutex_init(&(prgm->philos[i].meals_eaten_lock), NULL);
 		prgm->philos[i].last_meal = 0;
 		prgm->philos[i].meals_eaten = 0;
 		prgm->philos[i].eating = 0;
@@ -222,6 +246,9 @@ int	mutex_destroy(t_program *prgm)
 	while (i < prgm->number_of_philosophers)
 	{
 		pthread_mutex_destroy(&prgm->forks[i]);
+		pthread_mutex_destroy(&(prgm->philos[i].meal_lock));
+		pthread_mutex_destroy(&(prgm->philos[i].dead_lock));
+		pthread_mutex_destroy(&(prgm->philos[i].meals_eaten_lock));
 		i++;
 	}
 	pthread_mutex_destroy(&prgm->print_lock);
@@ -247,7 +274,7 @@ int	main(int argc, char **argv)
 {
 	t_program	*prgm;
 
-	if (argc != 5)
+	if (argc > 6)
 		return (1);
 	prgm = malloc(sizeof(t_program));
 	if (!prgm)

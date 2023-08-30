@@ -6,7 +6,7 @@
 /*   By: sanjokbhatta <sanjokbhatta@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:55 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/30 14:13:06 by sanjokbhatt      ###   ########.fr       */
+/*   Updated: 2023/08/30 14:34:45 by sanjokbhatt      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ typedef struct s_philo
 	int					meals_eaten;
 	pthread_mutex_t		*left_fork;
 	pthread_mutex_t		*right_fork;
+	pthread_mutex_t		meals_eaten_lock;
 	pthread_mutex_t		meal_lock;
 	pthread_mutex_t		dead_lock;
 	pthread_mutex_t		print_lock;
