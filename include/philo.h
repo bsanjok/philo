@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
+/*   By: sanjokbhatta <sanjokbhatta@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:55 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/27 14:11:20 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/08/30 14:13:06 by sanjokbhatt      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,11 @@ typedef struct s_philo
 	int					id;
 	int					eating;
 	int					meals_eaten;
-	pthread_mutex_t		left_fork;
-	pthread_mutex_t		right_fork;
+	pthread_mutex_t		*left_fork;
+	pthread_mutex_t		*right_fork;
 	pthread_mutex_t		meal_lock;
+	pthread_mutex_t		dead_lock;
+	pthread_mutex_t		print_lock;
 	size_t				last_meal;
 	struct s_program	*prgm;
 
@@ -40,14 +42,13 @@ typedef struct s_program
 	pthread_mutex_t		*forks;
 	pthread_mutex_t		start_time_lock;
 	pthread_mutex_t		print_lock;
-	pthread_mutex_t		meal_lock;
-	pthread_mutex_t		dead_lock;
 	size_t				time_to_die;
 	size_t				time_to_sleep;
 	size_t				time_to_eat;
 	size_t				start_time;
 	int					number_of_philosophers;
 	int					num_times_to_eat;
+	int					end_now;
 	t_philo				*philos;
 
 }	t_program;
@@ -55,6 +56,7 @@ typedef struct s_program
 
 size_t	ft_gettime(void);
 int		ft_usleep(size_t ms);
+int check_death(t_program *prgm, t_philo *philos);
 int	sleeping(t_program *prgm, t_philo *philos);
 /*
 // take one fork
