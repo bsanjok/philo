@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/01 13:52:03 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/01 18:51:27 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/01 19:14:38 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,10 +40,10 @@ int	init_prgm(t_program *prgm, char **argv, int argc)
 	int	i;
 
 	i = 0;
-	prgm->number_of_philosophers = atoi(argv[1]);
-	prgm->time_to_die = atoi(argv[2]);
-	prgm->time_to_eat = atoi(argv[3]);
-	prgm->time_to_sleep = atoi(argv[4]);
+	prgm->number_of_philosophers = ft_atoi_long(argv[1]);
+	prgm->time_to_die = ft_atoi_long(argv[2]);
+	prgm->time_to_eat = ft_atoi_long(argv[3]);
+	prgm->time_to_sleep = ft_atoi_long(argv[4]);
 	if (!check_valid_time_to(prgm))
 		return (0);
 	if (prgm->number_of_philosophers == 1)

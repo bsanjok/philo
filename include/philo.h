@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:55 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/01 18:31:08 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/01 19:14:16 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,5 +72,6 @@ int			take_fork_to_eat(t_program *prgm, t_philo *philos);
 int			check_eat_count(t_program *prgm);
 void		check_need_of_eat_count(t_program *prgm, int argc);
 void		ft_free(void *ptr);
+long		ft_atoi_long(const char *str);
 
 #endif

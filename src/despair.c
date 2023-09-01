@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/01 13:58:22 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/01 17:06:22 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/01 19:07:31 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ int	print_dead(t_philo *philos, t_program *prgm, char *msg)
 	if (prgm->end_now >= 1)
 		return (0);
 	pthread_mutex_lock(&prgm->print_lock);
-	printf("%zums %d %s\n", ft_gettime() - prgm->start_time, philos->id, msg);
+	printf("%zu %d %s\n", ft_gettime() - prgm->start_time, philos->id, msg);
 	pthread_mutex_lock(&prgm->end_lock);
 	prgm->end_now++;
 	pthread_mutex_unlock(&prgm->end_lock);
