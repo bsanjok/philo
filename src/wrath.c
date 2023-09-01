@@ -1,16 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   seek_and_destroy.c                                 :+:      :+:    :+:   */
+/*   wrath.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/01 13:53:09 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/01 13:53:42 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/01 18:26:27 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/philo.h"
+
+void	ft_free(void *ptr)
+{
+	if (ptr)
+	{
+		free(ptr);
+		ptr = NULL;
+	}
+}
 
 int	mutex_destroy(t_program *prgm)
 {
@@ -26,15 +35,16 @@ int	mutex_destroy(t_program *prgm)
 		i++;
 	}
 	pthread_mutex_destroy(&prgm->print_lock);
+	pthread_mutex_destroy(&(prgm->end_lock));
+
+	ft_free(prgm->forks);
 	return (1);
 }
 
-void	free_and_exit(void *n, int exit_code)
+void	free_and_exit(t_program *prgm)
 {
-	if (n)
-	{
-		free(n);
-		n = NULL;
-	}
-	exit(exit_code);
+	mutex_destroy(prgm);
+	ft_free(prgm->fork_usage);
+	ft_free(prgm->philos);
+	ft_free(prgm);
 }

@@ -6,13 +6,36 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/01 13:52:03 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/01 14:05:08 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/01 18:51:27 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/philo.h"
 
-int	init_prgm(t_program *prgm, char **argv)
+int	check_valid_time_to(t_program *prgm)
+{
+	int	result;
+
+	result = 1;
+	if (prgm->time_to_die < 60)
+	{
+		printf("time_to_die should be above 60ms\n");
+		result = 0;
+	}
+	if (prgm->time_to_eat < 60)
+	{
+		printf("time_to_eat should be above 60ms\n");
+		result = 0;
+	}
+	if (prgm->time_to_sleep < 60)
+	{
+		printf("time_to_sleep should be above 60ms\n");
+		result = 0;
+	}
+	return (result);
+}
+
+int	init_prgm(t_program *prgm, char **argv, int argc)
 {
 	int	i;
 
@@ -21,13 +44,31 @@ int	init_prgm(t_program *prgm, char **argv)
 	prgm->time_to_die = atoi(argv[2]);
 	prgm->time_to_eat = atoi(argv[3]);
 	prgm->time_to_sleep = atoi(argv[4]);
-	prgm->num_times_to_eat = atoi(argv[5]);
+	if (!check_valid_time_to(prgm))
+		return (0);
+	if (prgm->number_of_philosophers == 1)
+	{
+		ft_usleep(prgm->time_to_die);
+		printf("%zu 1 died\n", prgm->time_to_die);
+		return (0);
+	}
+	prgm->dead = 0;
+	prgm->all_eaten = 0;
+	if (argc == 6)
+	{
+		prgm->num_times_to_eat = atoi(argv[5]);
+		if (prgm->num_times_to_eat <= 0)
+		{
+			printf("Number of times to eat is set to 0 or less\n");
+			return (0);
+		}
+	}
 	prgm->start_time = ft_gettime();
 	prgm->end_now = 0;
-	prgm->forks = malloc(sizeof(pthread_mutex_t) * prgm->number_of_philosophers + 1);
+	prgm->forks = malloc(sizeof(pthread_mutex_t) * prgm->number_of_philosophers);
 	if (!prgm->forks)
 		return (0);
-	prgm->fork_usage = malloc(sizeof(int) * prgm->number_of_philosophers + 1);
+	prgm->fork_usage = malloc(sizeof(int) * prgm->number_of_philosophers);
 	if (!prgm->fork_usage)
 		return (0);
 	while (i < prgm->number_of_philosophers)
@@ -36,8 +77,8 @@ int	init_prgm(t_program *prgm, char **argv)
 		prgm->fork_usage[i] = 0;
 		i++;
 	}
-	prgm->fork_usage[i] = -1;
 	pthread_mutex_init(&(prgm->print_lock), NULL);
+	pthread_mutex_init(&(prgm->end_lock), NULL);
 	return (1);
 }
 
@@ -56,7 +97,6 @@ int	philo_init(t_program *prgm)
 		pthread_mutex_init(&(prgm->philos[i].meals_eaten_lock), NULL);
 		prgm->philos[i].last_meal = 0;
 		prgm->philos[i].meals_eaten = 0;
-		prgm->philos[i].eating = 0;
 		prgm->philos[i].prgm = prgm;
 		prgm->philos[i].id = i + 1;
 		i++;
@@ -77,6 +117,11 @@ int	philo_init(t_program *prgm)
 	while (i < prgm->number_of_philosophers)
 	{
 		pthread_mutex_init(&(prgm->forks[i]), NULL);
+		i++;
+	}
+	i = 0;
+	while (i < prgm->number_of_philosophers)
+	{
 		if (pthread_create(&(prgm->philos[i].threads), NULL, &start_program, &prgm->philos[i]))
 			return (-1);
 		i++;
@@ -93,4 +138,12 @@ size_t	ft_gettime(void)
 		return (-1);
 	result = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 	return (result);
+}
+
+void	check_need_of_eat_count(t_program *prgm ,int argc)
+{
+	if (argc == 6)
+		prgm->need_eat_count = 1;
+	else
+		prgm->need_eat_count = 0;
 }
