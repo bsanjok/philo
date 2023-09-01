@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sanjokbhatta <sanjokbhatta@student.42.f    +#+  +:+       +#+        */
+/*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:55 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/08/30 14:34:45 by sanjokbhatt      ###   ########.fr       */
+/*   Updated: 2023/09/01 14:09:35 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@ typedef struct s_philo
 	int					id;
 	int					eating;
 	int					meals_eaten;
+	int					*left_fork_usage;
+	int					*right_fork_usage;
 	pthread_mutex_t		*left_fork;
 	pthread_mutex_t		*right_fork;
 	pthread_mutex_t		meals_eaten_lock;
@@ -40,6 +42,7 @@ typedef struct s_philo
 typedef struct s_program
 {
 	int					dead;
+	int					*fork_usage;
 	pthread_mutex_t		*forks;
 	pthread_mutex_t		start_time_lock;
 	pthread_mutex_t		print_lock;
@@ -53,12 +56,22 @@ typedef struct s_program
 	t_philo				*philos;
 
 }	t_program;
-#endif
 
-size_t	ft_gettime(void);
-int		ft_usleep(size_t ms);
-int check_death(t_program *prgm, t_philo *philos);
-int	sleeping(t_program *prgm, t_philo *philos);
+size_t		ft_gettime(void);
+int			ft_usleep(size_t ms);
+int			sleeping(t_program *prgm, t_philo *philos);
+int			check_death(t_program *prgm, t_philo *philos);
+int			print_dead(t_philo *philos, t_program *prgm, char *msg);
+int			philo_print_statement(t_philo *philos, t_program *prgm, char *msg);
+void		*start_program(void *philos);
+int			mutex_destroy(t_program *prgm);
+void		free_and_exit(void *n, int exit_code);
+int			init_prgm(t_program *prgm, char **argv);
+int			philo_init(t_program *prgm);
+int			take_fork_to_eat(t_program *prgm, t_philo *philos);
+int			check_number_of_times_eaten(t_program *prgm);
+
+#endif
 /*
 // take one fork
   - lock mutex
