@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/01 13:55:17 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/01 18:27:48 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/02 17:30:00 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,22 +14,10 @@
 
 int	sleeping(t_program *prgm, t_philo *philos)
 {
-	size_t	sleep_time;
-
-	sleep_time = 0;
-	if (prgm->dead || (prgm->need_eat_count && check_eat_count(prgm)))
+	if (if_end(prgm))
 		return (0);
 	philo_print_statement(philos, prgm, "is sleeping");
-	while (1)
-	{
-		ft_usleep(1);
-		sleep_time++;
-		if (prgm->dead == 1 || prgm->end_now >= 1)
-			return (0);
-		check_death(prgm, philos);
-		if (sleep_time == prgm->time_to_sleep)
-			break ;
-	}
+	ft_usleep(prgm->time_to_sleep);
 	return (1);
 }
 

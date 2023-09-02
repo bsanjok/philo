@@ -6,11 +6,21 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/01 18:36:12 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/02 19:53:55 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/philo.h"
+
+int	if_end(t_program *prgm)
+{
+	int	result;
+
+	pthread_mutex_lock(&(prgm->death_lock));
+	result = prgm->dead;
+	pthread_mutex_unlock(&(prgm->death_lock));
+	return (result);
+}
 
 void	*start_program(void *philos)
 {
@@ -19,15 +29,17 @@ void	*start_program(void *philos)
 
 	holder = (t_philo *)philos;
 	prgm = holder->prgm;
-	while (prgm->dead != 1 && !prgm->end_now && !prgm->all_eaten)
+	while (!if_end(prgm))
 	{
+		if (if_end(prgm))
+			break ;
 		if (!take_fork_to_eat(prgm, philos))
 			break ;
-		if (check_death(prgm, holder))
+		if (if_end(prgm))
 			break ;
 		if (!sleeping(prgm, holder))
 			break ;
-		if (check_death(prgm, holder))
+		if (if_end(prgm))
 			break ;
 		philo_print_statement(holder, prgm, "is thinking");
 	}
@@ -46,6 +58,7 @@ int	thread_join(t_program *prgm)
 		pthread_join(temp.threads, NULL);
 		i++;
 	}
+	pthread_join(prgm->monitor_death, NULL);
 	return (1);
 }
 
@@ -67,7 +80,7 @@ int	main(int argc, char **argv)
 	if (!prgm)
 		return (1);
 	check_need_of_eat_count(prgm, argc);
-	if (!init_prgm(prgm, argv, argc))
+	if (!init_prgm(prgm, argv))
 		return (ft_free(prgm), 12);
 	philo_init(prgm);
 	thread_join(prgm);
