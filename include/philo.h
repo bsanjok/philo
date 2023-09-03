@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:55 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/03 18:25:03 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/03 19:08:01 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,31 +57,44 @@ typedef struct s_program
 	pthread_t			monitor_eating;
 }	t_program;
 
+//TIME
 size_t		ft_gettime(void);
 int			ft_usleep(size_t ms, t_program *prgm);
-int			sleeping(t_program *prgm, t_philo *philos);
-int			print_dead(int philos_id, t_program *prgm, char *msg);
-int			philo_print_statement(t_philo *philos, t_program *prgm, char *msg);
-void		*start_program(void *philos);
-int			mutex_destroy(t_program *prgm);
-void		free_and_exit(t_program *prgm);
+
+//PHILO LIFECYCLE
 int			init_prgm(t_program *prgm, char **argv);
 int			philo_init(t_program *prgm);
-int			take_fork_to_eat(t_program *prgm, t_philo *philos);
+void		*start_program(void *philos);
+int			sleeping(t_program *prgm, t_philo *philos);
+int			if_end(t_program *prgm);
+
+//PRINT
+int			print_dead(int philos_id, t_program *prgm, char *msg);
+int			philo_print_statement(t_philo *philos, t_program *prgm, char *msg);
+
+//MUTEX AND FREE
+int			mutex_destroy(t_program *prgm);
+void		free_and_exit(t_program *prgm);
+
+//PARSE CHECK
 void		check_need_of_eat_count(t_program *prgm, int argc);
+int			check_valid_args(char **argv);
+int			check_valid_time_to(t_program *prgm, char **argv);
+
+//MONITOR
+void		*monitor_end(void *holder);
+void		*monitor_eat_count(void *holder);
+
+//UTILS
 void		ft_free(void *ptr);
 long		ft_atoi_long(const char *str);
 int			ft_isnumber(char *str);
-int			check_valid_args(char **argv);
-int			check_valid_time_to(t_program *prgm, char **argv);
-void		*monitor_end(void *holder);
-void		*monitor_eat_count(void *holder);
-int			if_end(t_program *prgm);
 
 //EAT
 int			get_eat_count(t_philo *philos);
 
 //FORKS
+int			take_fork_to_eat(t_program *prgm, t_philo *philos);
 int			take_left_fork(t_program *prgm, t_philo *philos);
 int			take_right_fork(t_program *prgm, t_philo *philos);
 void		unlock_forks(t_program *prgm, t_philo *philos);

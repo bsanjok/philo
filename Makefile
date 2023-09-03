@@ -6,32 +6,38 @@
 #    By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/23 13:54:50 by sbhatta           #+#    #+#              #
-#    Updated: 2023/09/03 12:59:58 by sbhatta          ###   ########.fr        #
+#    Updated: 2023/09/03 18:56:26 by sbhatta          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC = cc
 CFLAGS = -Wextra -Werror -Wall -pthread -g
+OBJ_DIR = ./obj
 NAME = philo
 
-SRC = ./src/main.c ./src/despair.c ./src/gluttony.c ./src/init.c ./src/print.c ./src/sloth.c \
+GREEN		= \033[1;32m
+
+SRCS = ./src/main.c ./src/despair.c ./src/gluttony.c ./src/init.c ./src/print.c ./src/sloth.c \
 		./src/wrath.c ./src/utils.c ./src/checker.c ./src/take_forks.c
-OBJ = $(SRC:.c=.o)
+
+OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 
 all:$(NAME)
 
-$(NAME): $(OBJ)
-		$(CC) -o $@ $^
+$(NAME): $(OBJS)
+	$(CC) -o $@ $^
+	@echo "$(GREEN)Philosophers are ready to go! 👍$(GREEN)"
 
-%.o:%.c
-		$(CC) -c $(CFLAGS) -o $@ $<
+$(OBJ_DIR)/%.o: %.c
+	mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) -o $@ $<
 
 clean:
-		rm -f $(OBJ)
+	rm -rf $(OBJ_DIR)
 		
 fclean: clean
-		rm -f $(NAME)
+	rm -f $(NAME)
 		
-re:		fclean all
+re:	fclean all
 		
 .PHONY: all clean fclean
