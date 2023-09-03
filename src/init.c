@@ -6,17 +6,14 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/01 13:52:03 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/02 19:57:49 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/03 18:26:45 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/philo.h"
 
-int	init_prgm(t_program *prgm, char **argv)
+int	load_philo_args(t_program *prgm, char **argv)
 {
-	int	i;
-
-	i = 0;
 	if (!check_valid_args(argv))
 		return (0);
 	prgm->number_of_philosophers = ft_atoi_long(argv[1]);
@@ -29,41 +26,53 @@ int	init_prgm(t_program *prgm, char **argv)
 		return (0);
 	if (prgm->number_of_philosophers == 1)
 	{
-		ft_usleep(prgm->time_to_die);
+		ft_usleep(prgm->time_to_die, prgm);
 		printf("0 1 has taken a fork\n%zu 1 died\n", prgm->time_to_die);
 		return (0);
 	}
-	prgm->dead = 0;
-	prgm->start_time = ft_gettime();
-	prgm->forks = malloc(sizeof(pthread_mutex_t) * prgm->number_of_philosophers);
-	if (!prgm->forks)
-		return (0);
-	while (i < prgm->number_of_philosophers)
-	{
-		pthread_mutex_init(&(prgm->forks[i]), NULL);
-		i++;
-	}
-	pthread_mutex_init(&(prgm->print_lock), NULL);
 	return (1);
 }
 
-int	philo_init(t_program *prgm)
+int	init_prgm(t_program *prgm, char **argv)
+{
+	int	i;
+
+	i = -1;
+	if (!load_philo_args(prgm, argv))
+		return (0);
+	prgm->end = 0;
+	prgm->start_time = ft_gettime();
+	prgm->monitor_eating = 0;
+	prgm->monitor_end = 0;
+	prgm->forks = malloc(sizeof(pthread_mutex_t) * \
+	prgm->number_of_philosophers);
+	if (!prgm->forks)
+		return (0);
+	while (++i < prgm->number_of_philosophers)
+		pthread_mutex_init(&(prgm->forks[i]), NULL);
+	pthread_mutex_init(&(prgm->print_lock), NULL);
+	pthread_mutex_init(&(prgm->meals_eaten_lock), NULL);
+	pthread_mutex_init(&(prgm->death_lock), NULL);
+	pthread_mutex_init(&(prgm->fork_taken_lock), NULL);
+	return (1);
+}
+
+int	philo_alloc(t_program *prgm)
 {
 	int			i;
 
-	i = 0;
-	prgm->philos = (t_philo *)malloc(sizeof(t_philo) * prgm->number_of_philosophers);
-	if (!prgm->philos)
-		return (0);
-	while (i < prgm->number_of_philosophers)
+	i = -1;
+	while (++i < prgm->number_of_philosophers)
 	{
-		pthread_mutex_init(&(prgm->philos[i].meals_eaten_lock), NULL);
-		pthread_mutex_init(&(prgm->philos[i].ate_count_lock), NULL);
 		prgm->philos[i].last_meal = ft_gettime();
+		prgm->philos[i].fork_taken = 0;
+		prgm->philos[i].is_eating = 0;
 		prgm->philos[i].meals_eaten = 0;
 		prgm->philos[i].prgm = prgm;
 		prgm->philos[i].id = i + 1;
-		i++;
+		pthread_mutex_init(&(prgm->philos[i].meals_eaten_lock), NULL);
+		pthread_mutex_init(&(prgm->philos[i].ate_count_lock), NULL);
+		pthread_mutex_init(&(prgm->philos[i].fork_taken_lock), NULL);
 	}
 	i = 0;
 	prgm->philos[0].left_fork = &prgm->forks[0];
@@ -73,42 +82,31 @@ int	philo_init(t_program *prgm)
 		prgm->philos[i].left_fork = &prgm->forks[i];
 		prgm->philos[i].right_fork = &prgm->forks[i - 1];
 	}
-	i = 0;
-	while (i < prgm->number_of_philosophers)
-	{
-		pthread_mutex_init(&(prgm->forks[i]), NULL);
-		i++;
-	}
-	i = 0;
-	while (i < prgm->number_of_philosophers)
-	{
-		if (pthread_create(&(prgm->philos[i].threads), NULL, &start_program, &prgm->philos[i]))
-			return (-1);
-		if (pthread_create(&(prgm->monitor_death), NULL, &monitor_death, prgm))
-			return (-1);
-		if (prgm->need_eat_count)
-			if (pthread_create(&(prgm->monitor_eating), NULL, &monitor_eat_count, prgm))
-				return (-1);
-		i++;
-	}
-	return (0);
+	return (1);
 }
 
-size_t	ft_gettime(void)
+int	philo_init(t_program *prgm)
 {
-	struct timeval	tv;
-	size_t			result;
+	int			i;
 
-	if (gettimeofday(&tv, NULL) == -1)
+	i = -1;
+	prgm->philos = (t_philo *)malloc(sizeof(t_philo) * \
+	prgm->number_of_philosophers);
+	if (!prgm->philos)
+		return (0);
+	if (!philo_alloc(prgm))
+		return (0);
+	while (++i < prgm->number_of_philosophers)
+	{
+		if (pthread_create(&(prgm->philos[i].threads), NULL, \
+			&start_program, &prgm->philos[i]))
+			return (-1);
+	}
+	if (pthread_create(&(prgm->monitor_end), NULL, &monitor_end, prgm))
 		return (-1);
-	result = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-	return (result);
-}
-
-void	check_need_of_eat_count(t_program *prgm ,int argc)
-{
-	if (argc == 6)
-		prgm->need_eat_count = 1;
-	else
-		prgm->need_eat_count = 0;
+	if (prgm->need_eat_count)
+		if (pthread_create(&(prgm->monitor_eating), NULL, \
+		&monitor_eat_count, prgm))
+			return (-1);
+	return (1);
 }

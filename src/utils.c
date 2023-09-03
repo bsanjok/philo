@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/01 19:13:28 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/02 11:58:28 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/03 13:30:22 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,5 +91,16 @@ long	ft_atoi_long(const char *str)
 	result = ft_atoi_long_sup(str, i);
 	if (sign == 1)
 		return (-result);
+	return (result);
+}
+
+size_t	ft_gettime(void)
+{
+	struct timeval	tv;
+	size_t			result;
+
+	if (gettimeofday(&tv, NULL) == -1)
+		return (-1);
+	result = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 	return (result);
 }

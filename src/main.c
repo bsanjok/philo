@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/23 13:51:32 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/02 19:53:55 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/03 18:32:08 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ int	if_end(t_program *prgm)
 	int	result;
 
 	pthread_mutex_lock(&(prgm->death_lock));
-	result = prgm->dead;
+	result = prgm->end;
 	pthread_mutex_unlock(&(prgm->death_lock));
 	return (result);
 }
@@ -31,8 +31,6 @@ void	*start_program(void *philos)
 	prgm = holder->prgm;
 	while (!if_end(prgm))
 	{
-		if (if_end(prgm))
-			break ;
 		if (!take_fork_to_eat(prgm, philos))
 			break ;
 		if (if_end(prgm))
@@ -42,6 +40,7 @@ void	*start_program(void *philos)
 		if (if_end(prgm))
 			break ;
 		philo_print_statement(holder, prgm, "is thinking");
+		usleep(1000);
 	}
 	return (NULL);
 }
@@ -49,16 +48,15 @@ void	*start_program(void *philos)
 int	thread_join(t_program *prgm)
 {
 	int			i;
-	t_philo		temp;
 
-	i = 0;
-	while (i < prgm->number_of_philosophers)
-	{
-		temp = prgm->philos[i];
-		pthread_join(temp.threads, NULL);
-		i++;
-	}
-	pthread_join(prgm->monitor_death, NULL);
+	i = -1;
+	while (++i < prgm->number_of_philosophers)
+		if (prgm->philos[i].threads)
+			pthread_join(prgm->philos[i].threads, NULL);
+	if (prgm->monitor_end)
+		pthread_join(prgm->monitor_end, NULL);
+	if (prgm->monitor_eating)
+		pthread_join(prgm->monitor_eating, NULL);
 	return (1);
 }
 
@@ -82,7 +80,8 @@ int	main(int argc, char **argv)
 	check_need_of_eat_count(prgm, argc);
 	if (!init_prgm(prgm, argv))
 		return (ft_free(prgm), 12);
-	philo_init(prgm);
+	if (philo_init(prgm) != 1)
+		return (free_and_exit(prgm), 12);
 	thread_join(prgm);
 	free_and_exit(prgm);
 	return (0);
