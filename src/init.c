@@ -6,7 +6,7 @@
 /*   By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/01 13:52:03 by sbhatta           #+#    #+#             */
-/*   Updated: 2023/09/03 18:26:45 by sbhatta          ###   ########.fr       */
+/*   Updated: 2023/09/17 14:30:04 by sbhatta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ int	load_philo_args(t_program *prgm, char **argv)
 	prgm->time_to_eat = ft_atoi_long(argv[3]);
 	prgm->time_to_sleep = ft_atoi_long(argv[4]);
 	if (argv[5])
-		prgm->num_times_to_eat = atoi(argv[5]);
+		prgm->num_times_to_eat = ft_atoi_long(argv[5]);
 	if (!check_valid_time_to(prgm, argv))
 		return (0);
 	if (prgm->number_of_philosophers == 1)

@@ -6,12 +6,12 @@
 #    By: sbhatta <sbhatta@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/23 13:54:50 by sbhatta           #+#    #+#              #
-#    Updated: 2023/09/03 18:56:26 by sbhatta          ###   ########.fr        #
+#    Updated: 2023/09/03 20:52:44 by sbhatta          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CC = cc
-CFLAGS = -Wextra -Werror -Wall -pthread -g
+CFLAGS = -Wextra -Werror -Wall -pthread -fsanitize=thread -g
 OBJ_DIR = ./obj
 NAME = philo
 
@@ -25,7 +25,7 @@ OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 all:$(NAME)
 
 $(NAME): $(OBJS)
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 	@echo "$(GREEN)Philosophers are ready to go! 👍$(GREEN)"
 
 $(OBJ_DIR)/%.o: %.c
