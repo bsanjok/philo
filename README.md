@@ -1,4 +1,5 @@
-<img width="2099" alt="Screen Shot 2023-09-17 at 1 08 08 PM" src="https://github.com/bsanjok/philo/assets/32704316/61976a04-a08f-499a-bcdb-5f995d6366c5">
+
+<img width="680" alt="Screen Shot 2023-09-17 at 1 11 55 PM" src="https://github.com/bsanjok/philo/assets/32704316/dfeee6fb-ff95-41bf-b5b4-80faacb722e1">
 
 # The problem of philosphers, forks and food.
 
